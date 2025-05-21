@@ -3,18 +3,11 @@
 
 import type { Idea, Feedback } from '@/lib/definitions';
 import { IdeaSubmissionSchema, FeedbackSubmissionSchema, type IdeaSubmissionFormState, type FeedbackSubmissionFormState } from '@/lib/schemas';
-import { initialIdeas } from '@/lib/data';
 import { revalidatePath } from 'next/cache';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, orderBy, serverTimestamp, doc, updateDoc, arrayUnion, Timestamp } from 'firebase/firestore';
 
-// --- Persistence ---
-// TODO: Replace this in-memory store with a database solution (e.g., Firestore, Supabase, Prisma with a DB)
-// Ensure each initial idea has a feedback array.
-let ideas: Idea[] = initialIdeas.map(idea => ({
-  ...idea,
-  feedback: idea.feedback || [],
-}));
-
-// --- End Persistence ---
+// --- Persistence with Firestore ---
 
 export async function submitIdeaAction(
   prevState: IdeaSubmissionFormState | null,
@@ -34,39 +27,62 @@ export async function submitIdeaAction(
     };
   }
 
-  const newIdea: Idea = {
-    id: crypto.randomUUID(),
-    text: validatedFields.data.ideaText,
-    submittedAt: new Date(),
-    // --- User Authentication ---
-    // TODO: Replace 'Anonymous User' with authenticated user's ID/name from a session
-    author: 'Anonymous User',
-    // --- End User Authentication ---
-    feedback: [], // Initialize with an empty feedback array
-  };
+  try {
+    const newIdeaData = {
+      text: validatedFields.data.ideaText,
+      submittedAt: serverTimestamp(),
+      author: 'Anonymous User', // TODO: Replace with authenticated user's ID/name
+      feedback: [],
+    };
+    const docRef = await addDoc(collection(db, "ideas"), newIdeaData);
 
-  // TODO: Database interaction: ideas.unshift(newIdea) would become an INSERT operation.
-  ideas.unshift(newIdea);
+    revalidatePath('/');
+    // revalidatePath(`/ideas/${docRef.id}`); // If we had individual idea pages
 
-  revalidatePath('/'); // Revalidates the homepage where ideas are listed
-  revalidatePath(`/ideas/${newIdea.id}`); // If we had individual idea pages
-
-  return {
-    message: 'Idea submitted successfully!',
-    success: true,
-  };
+    return {
+      message: 'Idea submitted successfully!',
+      success: true,
+    };
+  } catch (error) {
+    console.error("Error submitting idea to Firestore:", error);
+    return {
+      message: 'Database error: Failed to submit idea.',
+      success: false,
+    };
+  }
 }
 
 export async function getIdeasAction(): Promise<Idea[]> {
-  // TODO: Database interaction: return ideas would become a SELECT operation.
-  // Ensure all ideas have a feedback array for type consistency.
-  return ideas.map(idea => ({
-    ...idea,
-    feedback: idea.feedback || [],
-  }));
+  try {
+    const ideasCollection = collection(db, "ideas");
+    const q = query(ideasCollection, orderBy("submittedAt", "desc"));
+    const querySnapshot = await getDocs(q);
+    
+    const ideas: Idea[] = querySnapshot.docs.map(docSnap => {
+      const data = docSnap.data();
+      // Ensure feedback array exists and convert timestamps
+      const feedback = (data.feedback || []).map((fb: any) => ({
+        ...fb,
+        submittedAt: fb.submittedAt instanceof Timestamp ? fb.submittedAt.toDate() : new Date(fb.submittedAt),
+      }));
+
+      return {
+        id: docSnap.id,
+        text: data.text,
+        // Convert Firestore Timestamp to JavaScript Date object
+        submittedAt: data.submittedAt instanceof Timestamp ? data.submittedAt.toDate() : new Date(data.submittedAt),
+        author: data.author,
+        feedback: feedback,
+      } as Idea;
+    });
+    return ideas;
+  } catch (error) {
+    console.error("Error fetching ideas from Firestore:", error);
+    return []; // Return empty array on error
+  }
 }
 
-// --- Feedback System ---
+// --- Feedback System with Firestore ---
 export async function addFeedbackAction(
   prevState: FeedbackSubmissionFormState | null,
   formData: FormData
@@ -85,42 +101,42 @@ export async function addFeedbackAction(
       success: false,
     };
   }
-
-  const idea = ideas.find(i => i.id === validatedFields.data.ideaId);
-  if (!idea) {
-    return { success: false, message: "Idea not found." };
-  }
+  
+  const submittedAtDate = new Date();
 
   const newFeedbackItem: Feedback = {
-    id: crypto.randomUUID(),
+    id: crypto.randomUUID(), // Client-generated ID for feedback item within the array
     ideaId: validatedFields.data.ideaId,
     text: validatedFields.data.feedbackText,
-    submittedAt: new Date(),
-    // TODO: Replace with actual authenticated user data
-    author: 'Anonymous Feedbacker',
+    submittedAt: submittedAtDate, 
+    author: 'Anonymous Feedbacker', // TODO: Replace with actual authenticated user data
   };
 
-  // TODO: Database interaction: Save newFeedbackItem to the database, associated with ideaId.
-  // For in-memory simulation, find the idea and add feedback to it.
-  const ideaIndex = ideas.findIndex(i => i.id === newFeedbackItem.ideaId);
-  if (ideaIndex !== -1) {
-    if (!ideas[ideaIndex].feedback) {
-      ideas[ideaIndex].feedback = [];
+  try {
+    const ideaRef = doc(db, "ideas", newFeedbackItem.ideaId);
+    
+    // Prepare feedback item for Firestore (convert Date to Timestamp)
+    const feedbackForFirestore = {
+      ...newFeedbackItem,
+      submittedAt: Timestamp.fromDate(submittedAtDate),
+    };
+
+    await updateDoc(ideaRef, {
+      feedback: arrayUnion(feedbackForFirestore)
+    });
+
+    revalidatePath('/'); 
+    // revalidatePath(`/ideas/${newFeedbackItem.ideaId}`);
+
+    return { success: true, message: 'Feedback submitted successfully!', feedbackItem: newFeedbackItem };
+  } catch (error) {
+    console.error("Error adding feedback to Firestore:", error);
+     let errorMessage = 'Database error: Failed to submit feedback.';
+    if (error instanceof Error && error.message.includes('No document to update')) {
+        errorMessage = 'Error: Idea not found. Could not submit feedback.';
     }
-    ideas[ideaIndex].feedback!.unshift(newFeedbackItem); // Add to the beginning
+    return { success: false, message: errorMessage };
   }
-
-  // Revalidate the path to update the UI where ideas/feedback are displayed.
-  revalidatePath('/'); // For the main ideas list
-  // If we had individual idea pages, we'd revalidate those too:
-  // revalidatePath(`/ideas/${newFeedbackItem.ideaId}`);
-
-  return { success: true, message: 'Feedback submitted successfully!', feedbackItem: newFeedbackItem };
 }
-
-export async function getFeedbackForIdeaAction(ideaId: string): Promise<Feedback[]> {
-  // TODO: Database interaction: Fetch feedback for the given ideaId from the database.
-  const idea = ideas.find(i => i.id === ideaId);
-  return idea?.feedback || [];
-}
+// getFeedbackForIdeaAction is no longer needed as feedback is passed directly to FeedbackDialog
 // --- End Feedback System ---

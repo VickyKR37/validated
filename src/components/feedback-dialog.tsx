@@ -1,15 +1,18 @@
+
 'use client';
 
 import { useState, useEffect, useActionState } from 'react';
+import * as React from 'react'; // Ensure React is imported for useFormStatus
+import { useFormStatus } from 'react-dom'; // Corrected import path
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useForm } from 'react-hook-form';
+import { useForm } from 'react-hook-form'; // useForm remains from react-hook-form
 import { zodResolver } from '@hookform/resolvers/zod';
 import type { z } from 'zod';
 import { FeedbackSubmissionSchema, type FeedbackSubmissionFormState } from '@/lib/schemas';
-import { addFeedbackAction, getFeedbackForIdeaAction } from '@/app/actions';
+import { addFeedbackAction } from '@/app/actions';
 import type { Feedback } from '@/lib/definitions';
 import { useToast } from '@/hooks/use-toast';
 import { Send, MessageSquare, UserRound, CalendarDays } from 'lucide-react';
@@ -20,12 +23,14 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 interface FeedbackDialogProps {
   ideaId: string;
   ideaText: string;
+  initialFeedbackList: Feedback[]; // Accept initial feedback list as a prop
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 function SubmitFeedbackButton() {
-  const { pending } = React.useFormStatus();
+  const { pending } = useFormStatus();
+
   return (
     <Button type="submit" disabled={pending} className="bg-primary hover:bg-primary/90 text-primary-foreground">
       {pending ? (
@@ -46,9 +51,17 @@ function SubmitFeedbackButton() {
 }
 
 
-export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: FeedbackDialogProps) {
-  const [feedbackList, setFeedbackList] = useState<Feedback[]>([]);
+export function FeedbackDialog({ ideaId, ideaText, initialFeedbackList, isOpen, onOpenChange }: FeedbackDialogProps) {
+  const [feedbackList, setFeedbackList] = useState<Feedback[]>(initialFeedbackList);
   const { toast } = useToast();
+
+  // Synchronize feedbackList with initialFeedbackList when isOpen changes or initialFeedbackList changes
+  useEffect(() => {
+    if (isOpen) {
+        setFeedbackList(initialFeedbackList);
+    }
+  }, [isOpen, initialFeedbackList]);
+
 
   const [state, formAction] = useActionState<FeedbackSubmissionFormState | null, FormData>(addFeedbackAction, null);
 
@@ -61,19 +74,8 @@ export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: Feedb
   });
 
   useEffect(() => {
-    // Update hidden ideaId field if it changes
     form.setValue('ideaId', ideaId);
   }, [ideaId, form]);
-
-  useEffect(() => {
-    if (isOpen) {
-      const fetchFeedback = async () => {
-        const feedback = await getFeedbackForIdeaAction(ideaId);
-        setFeedbackList(feedback);
-      };
-      fetchFeedback();
-    }
-  }, [isOpen, ideaId]);
 
   useEffect(() => {
     if (state?.message) {
@@ -82,7 +84,8 @@ export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: Feedb
           title: "Success!",
           description: state.message,
         });
-        setFeedbackList(prev => [state.feedbackItem!, ...prev]); // Add new feedback to the top
+        // Optimistically update the feedback list
+        setFeedbackList(prev => [state.feedbackItem!, ...prev].sort((a,b) => new Date(b.submittedAt.toString()).getTime() - new Date(a.submittedAt.toString()).getTime()));
         form.reset({ feedbackText: '', ideaId: ideaId });
       } else if (!state.success) {
         toast({
@@ -101,7 +104,7 @@ export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: Feedb
   
   const handleDialogClose = (open: boolean) => {
     if (!open) {
-        form.reset({ feedbackText: '', ideaId: ideaId }); // Reset form when dialog closes
+        form.reset({ feedbackText: '', ideaId: ideaId }); 
     }
     onOpenChange(open);
   };
@@ -119,8 +122,8 @@ export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: Feedb
           </DialogDescription>
         </DialogHeader>
         
-        <div className="flex-grow overflow-hidden pr-2"> {/* Added pr-2 for scrollbar space */}
-          <ScrollArea className="h-[300px] pr-4"> {/* Added pr-4 within ScrollArea for content padding */}
+        <div className="flex-grow overflow-hidden pr-2">
+          <ScrollArea className="h-[300px] pr-4">
             {feedbackList.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No feedback yet. Be the first to share your thoughts!</p>
             ) : (
@@ -138,7 +141,7 @@ export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: Feedb
                           <p className="text-sm font-semibold text-card-foreground">{fb.author}</p>
                           <p className="text-xs text-muted-foreground flex items-center">
                             <CalendarDays className="mr-1 h-3 w-3" />
-                            {formatDistanceToNow(new Date(fb.submittedAt), { addSuffix: true })}
+                            {fb.submittedAt ? formatDistanceToNow(new Date(fb.submittedAt.toString()), { addSuffix: true }) : 'recently'}
                           </p>
                         </div>
                       </div>
@@ -185,3 +188,4 @@ export function FeedbackDialog({ ideaId, ideaText, isOpen, onOpenChange }: Feedb
     </Dialog>
   );
 }
+

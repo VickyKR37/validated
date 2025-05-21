@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { Idea } from '@/lib/definitions';
@@ -7,10 +8,10 @@ import { Button } from '@/components/ui/button';
 import { MessageSquare, UserRound } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
-import { FeedbackDialog } from '@/components/feedback-dialog'; // Import the new dialog
+import { FeedbackDialog } from '@/components/feedback-dialog'; 
 
 export function IdeaCard({ idea }: { idea: Idea }) {
-  const timeAgo = formatDistanceToNow(new Date(idea.submittedAt), { addSuffix: true });
+  const timeAgo = idea.submittedAt ? formatDistanceToNow(new Date(idea.submittedAt.toString()), { addSuffix: true }) : 'some time ago';
   const authorInitial = idea.author ? idea.author.charAt(0).toUpperCase() : <UserRound className="h-5 w-5" />;
   const feedbackCount = idea.feedback?.length || 0;
 
@@ -49,6 +50,7 @@ export function IdeaCard({ idea }: { idea: Idea }) {
       <FeedbackDialog
         ideaId={idea.id}
         ideaText={idea.text}
+        initialFeedbackList={idea.feedback || []} // Pass feedback list as a prop
         isOpen={isFeedbackDialogOpen}
         onOpenChange={setIsFeedbackDialogOpen}
       />
