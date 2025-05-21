@@ -1,3 +1,5 @@
+'use client';
+
 import { testerResourcesData } from '@/lib/data';
 import type { Resource, ResourceCategory } from '@/lib/definitions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,13 +14,6 @@ const ResourceItem = ({ resource }: { resource: Resource }) => (
       <div>
         <h4 className="font-semibold text-foreground">{resource.name}</h4>
         <p className="text-sm text-muted-foreground mt-1">{resource.description}</p>
-        {resource.tags && (
-          <div className="mt-2 flex flex-wrap gap-2">
-            {resource.tags.map(tag => (
-              <span key={tag} className="px-2 py-0.5 text-xs bg-secondary text-secondary-foreground rounded-full">{tag}</span>
-            ))}
-          </div>
-        )}
       </div>
       <Button variant="outline" size="sm" asChild className="ml-4 shrink-0">
         <Link href={resource.url} target="_blank" rel="noopener noreferrer">
