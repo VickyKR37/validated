@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'TestFlight Finder - Validate Your Business Ideas',
-  description: 'Submit your business ideas, get feedback, and find testers for your new venture.',
+  title: 'Validated - Validate Your Business Ideas',
+  description: 'Submit your business ideas, get feedback, and find real paying users for beta testing for your new venture.',
 };
 
 export default function RootLayout({

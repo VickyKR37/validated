@@ -31,7 +31,7 @@ export function AppHeader() {
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
         <Link href="/" className="flex items-center gap-2">
           <Mountain className="h-6 w-6 text-primary-foreground" />
-          <span className="text-xl font-semibold text-primary-foreground">TestFlight Finder</span>
+          <span className="text-xl font-semibold text-primary-foreground">Validated</span>
         </Link>
         
         {/* Desktop Navigation */}
