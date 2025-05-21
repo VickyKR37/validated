@@ -3,7 +3,7 @@ import type { Resource, ResourceCategory } from '@/lib/definitions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Users, SearchCheck } from 'lucide-react'; // Added SearchCheck
+import { ExternalLink, SearchCheck } from 'lucide-react'; 
 import Link from 'next/link';
 
 const ResourceItem = ({ resource }: { resource: Resource }) => (
@@ -33,12 +33,12 @@ export function TesterResources() {
   return (
     <div className="w-full">
       <div className="text-center mb-12">
-        <SearchCheck className="h-16 w-16 text-primary mx-auto mb-4" /> {/* Changed Users to SearchCheck */}
+        <SearchCheck className="h-16 w-16 text-primary mx-auto mb-4" />
         <h2 className="text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
-          Connect with Testers
+          Find Paying Testers: The True Validation
         </h2>
         <p className="mt-4 text-xl text-muted-foreground max-w-2xl mx-auto">
-          Discover platforms and communities to find paid testers for your product and gather valuable feedback.
+          The ultimate test for any business idea: will people pay for it? This section helps you find resources to connect with users willing to provide paid feedback, offering crucial validation for your venture.
         </p>
       </div>
 

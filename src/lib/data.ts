@@ -1,5 +1,5 @@
 import type { Idea, ResourceCategory } from '@/lib/definitions';
-import { Users } from 'lucide-react'; // Removed FlaskConical, DollarSign, MessageSquare
+import { Users } from 'lucide-react';
 
 export const initialIdeas: Idea[] = [
   {
@@ -25,15 +25,15 @@ export const initialIdeas: Idea[] = [
 export const testerResourcesData: ResourceCategory[] = [
   {
     id: 'communities',
-    name: 'Online Communities',
+    name: 'Online Communities & Platforms',
     icon: Users,
     resources: [
       {
         id: 'tr-comm-1',
         name: 'BetaFamily',
-        description: 'Connect with beta testers for your mobile apps.',
+        description: 'Connect with beta testers for your mobile apps, including options to find users willing to provide *paid* feedback for early access.',
         url: 'https://betafamily.com/',
-        tags: ['free', 'paid', 'mobile', 'beta'],
+        tags: ['paid', 'free', 'mobile', 'beta', 'feedback'],
       }
     ],
   }

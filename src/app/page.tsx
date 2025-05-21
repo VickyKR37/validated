@@ -27,7 +27,7 @@ export default function HomePage() {
                 Launch Your Next <span className="text-primary">Big Idea</span>
               </h1>
               <p className="text-lg md:text-xl text-muted-foreground mb-8 max-w-xl mx-auto lg:mx-0">
-                Validated helps you validate your business concepts by connecting you with real user feedback and real paying users for beta testing.
+                Validated helps you truly validate your business concepts. The ultimate test: will people actually pay for your idea? Connect with real paying users for beta testing and get the feedback that truly matters.
               </p>
               <div className="flex gap-4 justify-center lg:justify-start">
                  <a href="#view-feedback" className="inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-primary-foreground bg-primary hover:bg-primary/90 shadow-md transition-transform hover:scale-105">
@@ -66,7 +66,7 @@ export default function HomePage() {
       <footer className="py-8 bg-primary text-primary-foreground text-center">
         <div className="container mx-auto px-4">
           <p>&copy; {new Date().getFullYear()} Validated. All rights reserved.</p>
-          <p className="text-sm opacity-80 mt-1">Helping innovators take flight.</p>
+          <p className="text-sm opacity-80 mt-1">Validate if people will pay. Take flight.</p>
         </div>
       </footer>
     </div>
