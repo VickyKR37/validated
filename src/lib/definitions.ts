@@ -1,8 +1,17 @@
+export interface Feedback {
+  id: string;
+  ideaId: string;
+  text: string;
+  submittedAt: Date;
+  author?: string; // Or authorId if auth is implemented
+}
+
 export interface Idea {
   id: string;
   text: string;
   submittedAt: Date;
-  author?: string; // Optional: if we want to display who submitted
+  author?: string;
+  feedback?: Feedback[]; // Array to hold feedback items
 }
 
 export interface ResourceCategory {

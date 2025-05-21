@@ -1,3 +1,4 @@
+
 'use client';
 
 import Link from 'next/link';
@@ -37,6 +38,10 @@ export function AppHeader() {
         {/* Desktop Navigation */}
         <nav className="hidden md:flex items-center gap-2">
           {navItems.map(item => <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />)}
+           {/* TODO: Implement User Authentication and make this button functional */}
+          <Button variant="outline" className="text-primary-foreground border-primary-foreground/50 hover:bg-primary-foreground/10 hover:text-accent-foreground ml-2">
+            Login / Sign Up
+          </Button>
         </nav>
 
         {/* Mobile Navigation */}
@@ -51,6 +56,12 @@ export function AppHeader() {
             <SheetContent side="right" className="w-[280px] bg-primary p-4">
               <div className="flex flex-col gap-4 pt-8">
                 {navItems.map(item => <NavLink key={item.href} href={item.href} label={item.label} icon={item.icon} />)}
+                <div className="mt-auto border-t border-primary-foreground/20 pt-4">
+                   {/* TODO: Implement User Authentication and make this button functional */}
+                  <Button variant="outline" className="w-full text-primary-foreground border-primary-foreground/50 hover:bg-primary-foreground/10 hover:text-accent-foreground">
+                    Login / Sign Up
+                  </Button>
+                </div>
               </div>
             </SheetContent>
           </Sheet>
