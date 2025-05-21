@@ -7,40 +7,73 @@ import { getAuth, type Auth } from 'firebase/auth';
 // This log will ONLY appear in your server console (terminal) when the Next.js app starts or reloads server-side modules.
 // It helps verify if your .env.local file is being loaded and if the Firebase environment variables are accessible.
 // If you see "NOT SET or undefined" for any of these, it means:
-// 1. Your .env.local file might be in the wrong location (it MUST be in the project root).
+// 1. Your .env.local file might be in the wrong location (it MUST be in the project root, same level as package.json).
 // 2. You might have typos in the environment variable names in .env.local (they MUST start with NEXT_PUBLIC_).
-// 3. You have NOT RESTARTED your Next.js development server after creating or modifying .env.local.
+// 3. **YOU HAVE NOT RESTARTED YOUR NEXT.JS DEVELOPMENT SERVER AFTER CREATING/MODIFYING .ENV.LOCAL. THIS IS THE MOST COMMON CAUSE.**
 if (typeof window === 'undefined') { // Ensures this only runs on the server
   console.log('--- Firebase Initialization Server Log ---');
-  const criticalEnvVars = [
+  const criticalEnvVars: string[] = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
     'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
     'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
     'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID',
+    // 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', // Measurement ID is optional for core functionality
   ];
   criticalEnvVars.forEach(varName => {
     const value = process.env[varName];
-    console.log(
-      `[Firebase Setup] ${varName}: ${value ? `Present (length: ${value.length})` : 'NOT SET or undefined'}`
-    );
+    let statusMessage = '!!!!!!!! NOT SET or undefined !!!!!!!!';
+    if (value) {
+      if (varName === 'NEXT_PUBLIC_FIREBASE_API_KEY') {
+        statusMessage = `Present (length: ${value.length})`;
+      } else {
+        statusMessage = 'Present';
+      }
+    }
+    console.log(`[Firebase Setup] ${varName}: ${statusMessage}`);
   });
   console.log('------------------------------------------');
+  console.log('If NEXT_PUBLIC_FIREBASE_API_KEY (or other critical vars) are "NOT SET or undefined" or have an unexpected length:');
+  console.log('1. Ensure .env.local is in the project root.');
+  console.log('2. Verify correct variable names (must start with NEXT_PUBLIC_).');
+  console.log('3. **CRITICAL: Restart your Next.js development server (npm run dev) after any .env.local changes.**');
 }
 
-// --- ATTENTION: Firebase Configuration ---
-// The "auth/invalid-api-key" error almost always means there's an issue with the values below,
-// especially NEXT_PUBLIC_FIREBASE_API_KEY.
+// --- URGENT: RESOLVING "auth/invalid-api-key" ---
+// This error means the API key provided to Firebase is INCORRECT or RESTRICTED for the specified Firebase project.
+// The JavaScript code below for `firebaseConfig` is standard. The problem is almost certainly
+// with the VALUES in your .env.local file or your Firebase/Google Cloud project settings.
 //
-// PLEASE VERIFY THE FOLLOWING:
-// 1. Your .env.local file is in the project root directory.
-// 2. You have correctly copied ALL these values from your Firebase project settings.
-//    (Firebase Console > Project settings (gear icon) > General tab > Your apps > Web app > Firebase SDK snippet > Config)
-// 3. There are NO typos or extra spaces in these values in your .env.local file.
-// 4. You have RESTARTED your Next.js development server (npm run dev) after making changes to .env.local.
-// 5. Firebase Authentication is ENABLED in your Firebase project (Firebase Console > Build > Authentication > Get started).
-// 6. Check for API key restrictions in Google Cloud Console (APIs & Services > Credentials) that might prevent usage.
+// PLEASE METICULOUSLY VERIFY THE FOLLOWING:
+//
+// 1.  **API KEY VALUE in `.env.local`**:
+//     *   Is `NEXT_PUBLIC_FIREBASE_API_KEY` in `.env.local` EXACTLY correct?
+//     *   Copy it directly from: Firebase Console > Project settings (gear icon) > General tab > Your apps > Web app > Firebase SDK snippet > `apiKey`.
+//     *   NO typos, NO extra spaces, NOT truncated.
+//
+// 2.  **ALL FIREBASE CONFIG VALUES in `.env.local`**:
+//     *   Ensure `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, etc., also EXACTLY match your Firebase project.
+//     *   An API key is often tied to a specific project ID and auth domain. Mismatches can cause "invalid-api-key".
+//
+// 3.  **SERVER RESTART**:
+//     *   Have you RESTARTED your Next.js development server (`npm run dev`) AFTER saving changes to `.env.local`? This is ESSENTIAL.
+//
+// 4.  **`.env.local` FILE LOCATION & NAME**:
+//     *   Is your file named exactly `.env.local`? Is it in the VERY ROOT of your project (same level as `package.json`)?
+//
+// 5.  **FIREBASE PROJECT SETTINGS**:
+//     *   **Authentication Enabled**: In Firebase Console > Build > Authentication: Click "Get started" if you haven't, and ensure at least one provider (e.g., Email/Password) is enabled.
+//     *   **API Key Restrictions (Google Cloud Console)**:
+//         *   Navigate to Google Cloud Console > APIs & Services > Credentials.
+//         *   Select the API key used by Firebase (often "Browser key (auto created by Firebase)").
+//         *   Under "Application restrictions", try setting to "None" temporarily for testing, or ensure your app's domain (e.g., `localhost:your_port`) is allowed.
+//         *   Under "API restrictions", ensure "Identity Platform API" (sometimes listed as "Cloud Identity Platform API" or similar for Firebase Auth) and "Cloud Firestore API" are allowed.
+//
+// If the server log above shows your API key as "Present" with a reasonable length,
+// but the error persists, the key itself is likely invalid for the configured project ID/auth domain,
+// or it's restricted in Google Cloud Console.
+//
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -48,7 +81,7 @@ const firebaseConfig = {
   storageBucket: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET,
   messagingSenderId: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.NEXT_PUBLIC_FIREBASE_APP_ID,
-  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional, often not critical for auth/firestore
+  measurementId: process.env.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID, // Optional
 };
 
 // Initialize Firebase
@@ -60,6 +93,9 @@ if (!getApps().length) {
 }
 
 const db: Firestore = getFirestore(app);
-const auth: Auth = getAuth(app); // This line will throw "auth/invalid-api-key" if apiKey is wrong
+// THE ERROR "auth/invalid-api-key" ORIGINATES HERE IF THE API KEY IN `firebaseConfig` (derived from your .env.local) IS REJECTED BY FIREBASE.
+// This usually means the apiKey value from .env.local is incorrect, not loaded, or restricted.
+const auth: Auth = getAuth(app);
 
 export { app, db, auth };
+
