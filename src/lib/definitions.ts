@@ -3,15 +3,15 @@ export interface Feedback {
   ideaId: string;
   text: string;
   submittedAt: Date;
-  author?: string; // Or authorId if auth is implemented
+  author: string; // Or authorId if auth is implemented
 }
 
 export interface Idea {
   id: string;
   text: string;
   submittedAt: Date;
-  author?: string;
-  feedback?: Feedback[]; // Array to hold feedback items
+  author: string;
+  feedback: Feedback[]; // Array to hold feedback items
 }
 
 export interface ResourceCategory {

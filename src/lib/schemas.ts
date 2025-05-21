@@ -10,3 +10,15 @@ export type IdeaSubmissionFormState = {
   issues?: string[];
   success: boolean;
 } | null;
+
+export const FeedbackSubmissionSchema = z.object({
+  feedbackText: z.string().min(5, { message: "Feedback should be at least 5 characters long." }).max(500, { message: "Keep your feedback concise (max 500 characters)." }),
+  ideaId: z.string(), // Hidden field, but good to have in schema if passed explicitly
+});
+
+export type FeedbackSubmissionFormState = {
+  message: string;
+  issues?: string[];
+  success: boolean;
+  feedbackItem?: import('@/lib/definitions').Feedback;
+} | null;
