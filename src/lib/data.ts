@@ -1,7 +1,7 @@
-import type { Idea, ResourceCategory } from '@/lib/definitions';
-import { Users } from 'lucide-react';
+import type { ResourceCategory } from '@/lib/definitions';
+import { Users } from 'lucide-react'; // FlaskConical, DollarSign, MessageSquare removed as they are no longer used
 
-export const initialIdeas: Idea[] = [
+export const initialIdeas = [
   {
     id: '1',
     text: 'A mobile app that uses AI to create personalized workout plans based on available equipment and fitness goals.',
@@ -31,9 +31,9 @@ export const testerResourcesData: ResourceCategory[] = [
       {
         id: 'tr-comm-1',
         name: 'BetaFamily',
-        description: 'Connect with beta testers for your mobile apps, including options to find users willing to provide *paid* feedback for early access.',
+        description: 'Connect with beta testers for your mobile apps, specifically focusing on finding users willing to provide *paid* feedback for early access and validation.',
         url: 'https://betafamily.com/',
-        tags: ['paid', 'free', 'mobile', 'beta', 'feedback'],
+        tags: ['paid', 'mobile', 'beta', 'feedback'],
       }
     ],
   }
