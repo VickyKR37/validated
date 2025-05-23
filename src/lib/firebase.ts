@@ -16,34 +16,46 @@ import { getAuth, type Auth } from 'firebase/auth';
 //
 if (typeof window === 'undefined') { // Ensures this only runs on the server
   console.log('\n--- Firebase Initialization Server Log ---');
-  const criticalEnvVars: string[] = [
-    'NEXT_PUBLIC_FIREBASE_API_KEY',
-    'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
-    'NEXT_PUBLIC_FIREBASE_PROJECT_ID',
-    'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
-    'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
-    'NEXT_PUBLIC_FIREBASE_APP_ID',
-    // 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', // Measurement ID is optional for core Firebase services
+  const criticalEnvVars: { name: string; value: string | undefined }[] = [
+    { name: 'NEXT_PUBLIC_FIREBASE_API_KEY', value: process.env.NEXT_PUBLIC_FIREBASE_API_KEY },
+    { name: 'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN', value: process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN },
+    { name: 'NEXT_PUBLIC_FIREBASE_PROJECT_ID', value: process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID },
+    { name: 'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET', value: process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET },
+    { name: 'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID', value: process.env.NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID },
+    { name: 'NEXT_PUBLIC_FIREBASE_APP_ID', value: process.env.NEXT_PUBLIC_FIREBASE_APP_ID },
   ];
-  criticalEnvVars.forEach(varName => {
-    const value = process.env[varName];
+
+  criticalEnvVars.forEach(envVar => {
     let statusMessage = '!!!!!!!! NOT SET or undefined !!!!!!!! -- THIS IS LIKELY THE PROBLEM!';
-    if (value) {
-      if (varName === 'NEXT_PUBLIC_FIREBASE_API_KEY') {
-        statusMessage = `Present (length: ${value.length}) - Verify this key and length are correct.`;
+    if (envVar.value) {
+      if (envVar.name === 'NEXT_PUBLIC_FIREBASE_API_KEY') {
+        statusMessage = `Present (length: ${envVar.value.length}) - Verify this key and length are correct.`;
+        // !!! TEMPORARY DEBUGGING LOG - REMOVE AFTER VERIFICATION !!!
+        // !!! DO NOT COMMIT OR DEPLOY CODE THAT LOGS API KEYS !!!
+        console.error(`[Firebase Setup - DEBUG] ACTUAL API KEY VALUE (SERVER-SIDE): "${envVar.value}" <-- VERIFY THIS VALUE EXACTLY! REMOVE THIS LOG AFTER DEBUGGING.`);
+        // !!! END TEMPORARY DEBUGGING LOG !!!
       } else {
-        statusMessage = `Present - Value: ${value}`;
+        statusMessage = `Present - Value: ${envVar.value}`;
       }
     }
-    console.log(`[Firebase Setup] ${varName}: ${statusMessage}`);
+    console.log(`[Firebase Setup] ${envVar.name}: ${statusMessage}`);
   });
-  console.log('------------------------------------------');
-  console.log('If NEXT_PUBLIC_FIREBASE_API_KEY (or other critical vars) are "NOT SET or undefined" or have an unexpected length/value:');
-  console.log('1. Ensure `.env.local` is in the project ROOT directory (same level as `package.json`).');
-  console.log('2. Verify correct variable names in `.env.local` (MUST start with `NEXT_PUBLIC_`).');
-  console.log('3. **CRITICAL: Restart your Next.js development server (`npm run dev`) after any `.env.local` changes.**');
-  console.log('4. Double-check for typos in the copied values from your Firebase console.');
-  console.log('------------------------------------------\n');
+
+  if (!process.env.NEXT_PUBLIC_FIREBASE_API_KEY || !process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID) {
+    console.error('\n[Firebase Setup Critical Error] API Key or Project ID is missing or undefined!');
+    console.error('Please ensure your .env.local file is in the project root and contains all necessary NEXT_PUBLIC_FIREBASE_ variables.');
+    console.error('YOU MUST RESTART your Next.js development server (npm run dev) after creating or modifying .env.local.');
+    console.error('------------------------------------------\n');
+  } else {
+    console.log('[Firebase Setup] All critical environment variables seem to be present.');
+    console.log('If "auth/invalid-api-key" persists, verify the following:');
+    console.log('1. The API key value logged above EXACTLY matches the one in your Firebase console.');
+    console.log('2. Firebase Authentication is ENABLED in your Firebase project (Build > Authentication > Get started).');
+    console.log('3. Your API key has NO RESTRICTIONS in Google Cloud Console (APIs & Services > Credentials) that would block its use, OR your app\'s domain is correctly whitelisted.');
+    console.log('   - Check both "Application restrictions" (try "None" for testing) and "API restrictions" (ensure "Cloud Identity Platform API" is allowed).');
+    console.log('4. You have RESTARTED your Next.js development server after any .env.local or Firebase console changes.');
+    console.log('------------------------------------------\n');
+  }
 }
 
 // --- URGENT: RESOLVING "auth/invalid-api-key" ---
