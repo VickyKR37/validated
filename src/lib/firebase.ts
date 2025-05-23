@@ -6,12 +6,16 @@ import { getAuth, type Auth } from 'firebase/auth';
 // --- CRITICAL: Firebase Initialization Server Log ---
 // This log will ONLY appear in your server console (terminal) when the Next.js app starts or reloads server-side modules.
 // It helps verify if your .env.local file is being loaded and if the Firebase environment variables are accessible.
-// If you see "NOT SET or undefined" for any of these, it means:
+//
+// **IF YOU SEE "NOT SET or undefined" FOR ANY OF THESE, IT MEANS:**
 // 1. Your .env.local file might be in the wrong location (it MUST be in the project root, same level as package.json).
 // 2. You might have typos in the environment variable names in .env.local (they MUST start with NEXT_PUBLIC_).
 // 3. **YOU HAVE NOT RESTARTED YOUR NEXT.JS DEVELOPMENT SERVER AFTER CREATING/MODIFYING .ENV.LOCAL. THIS IS THE MOST COMMON CAUSE.**
+//
+// ** ===> ACTION: RESTART YOUR `npm run dev` SERVER NOW IF YOU'VE MADE ANY CHANGES TO `.env.local` <=== **
+//
 if (typeof window === 'undefined') { // Ensures this only runs on the server
-  console.log('--- Firebase Initialization Server Log ---');
+  console.log('\n--- Firebase Initialization Server Log ---');
   const criticalEnvVars: string[] = [
     'NEXT_PUBLIC_FIREBASE_API_KEY',
     'NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN',
@@ -19,25 +23,27 @@ if (typeof window === 'undefined') { // Ensures this only runs on the server
     'NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET',
     'NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID',
     'NEXT_PUBLIC_FIREBASE_APP_ID',
-    // 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', // Measurement ID is optional for core functionality
+    // 'NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID', // Measurement ID is optional for core Firebase services
   ];
   criticalEnvVars.forEach(varName => {
     const value = process.env[varName];
-    let statusMessage = '!!!!!!!! NOT SET or undefined !!!!!!!!';
+    let statusMessage = '!!!!!!!! NOT SET or undefined !!!!!!!! -- THIS IS LIKELY THE PROBLEM!';
     if (value) {
       if (varName === 'NEXT_PUBLIC_FIREBASE_API_KEY') {
-        statusMessage = `Present (length: ${value.length})`;
+        statusMessage = `Present (length: ${value.length}) - Verify this key and length are correct.`;
       } else {
-        statusMessage = 'Present';
+        statusMessage = `Present - Value: ${value}`;
       }
     }
     console.log(`[Firebase Setup] ${varName}: ${statusMessage}`);
   });
   console.log('------------------------------------------');
-  console.log('If NEXT_PUBLIC_FIREBASE_API_KEY (or other critical vars) are "NOT SET or undefined" or have an unexpected length:');
-  console.log('1. Ensure .env.local is in the project root.');
-  console.log('2. Verify correct variable names (must start with NEXT_PUBLIC_).');
-  console.log('3. **CRITICAL: Restart your Next.js development server (npm run dev) after any .env.local changes.**');
+  console.log('If NEXT_PUBLIC_FIREBASE_API_KEY (or other critical vars) are "NOT SET or undefined" or have an unexpected length/value:');
+  console.log('1. Ensure `.env.local` is in the project ROOT directory (same level as `package.json`).');
+  console.log('2. Verify correct variable names in `.env.local` (MUST start with `NEXT_PUBLIC_`).');
+  console.log('3. **CRITICAL: Restart your Next.js development server (`npm run dev`) after any `.env.local` changes.**');
+  console.log('4. Double-check for typos in the copied values from your Firebase console.');
+  console.log('------------------------------------------\n');
 }
 
 // --- URGENT: RESOLVING "auth/invalid-api-key" ---
@@ -45,7 +51,7 @@ if (typeof window === 'undefined') { // Ensures this only runs on the server
 // The JavaScript code below for `firebaseConfig` is standard. The problem is almost certainly
 // with the VALUES in your .env.local file or your Firebase/Google Cloud project settings.
 //
-// PLEASE METICULOUSLY VERIFY THE FOLLOWING:
+// PLEASE METICULOUSLY VERIFY THE FOLLOWING AFTER CHECKING THE SERVER LOGS ABOVE:
 //
 // 1.  **API KEY VALUE in `.env.local`**:
 //     *   Is `NEXT_PUBLIC_FIREBASE_API_KEY` in `.env.local` EXACTLY correct?
@@ -56,7 +62,7 @@ if (typeof window === 'undefined') { // Ensures this only runs on the server
 //     *   Ensure `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`, `NEXT_PUBLIC_FIREBASE_PROJECT_ID`, etc., also EXACTLY match your Firebase project.
 //     *   An API key is often tied to a specific project ID and auth domain. Mismatches can cause "invalid-api-key".
 //
-// 3.  **SERVER RESTART**:
+// 3.  **SERVER RESTART (Again, this is critical!)**:
 //     *   Have you RESTARTED your Next.js development server (`npm run dev`) AFTER saving changes to `.env.local`? This is ESSENTIAL.
 //
 // 4.  **`.env.local` FILE LOCATION & NAME**:
@@ -98,4 +104,3 @@ const db: Firestore = getFirestore(app);
 const auth: Auth = getAuth(app);
 
 export { app, db, auth };
-
