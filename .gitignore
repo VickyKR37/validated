@@ -46,6 +46,7 @@ firestore-debug.log
 
 # .gitignore
 .env*
+.env.local
 .firebase/
 .next/
 functions/.next/
