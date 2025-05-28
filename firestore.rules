@@ -1,0 +1,31 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Ideas collection
+    match /ideas/{ideaId} {
+      // Allow read access to anyone (optional: restrict to auth users if needed)
+      allow read: if true;
+
+      // Allow write if the user is authenticated and:
+      // - They are creating the idea
+      // - OR updating their own idea (e.g., adding feedback)
+      allow create: if request.auth != null;
+
+      allow update: if request.auth != null &&
+        // Allow users to add feedback (but not modify other fields)
+        (request.resource.data.keys().hasOnly(['feedback']) ||
+        // Or if the user is the original author (if you're storing authorId)
+        request.auth.uid == resource.data.authorId);
+
+      // Prevent deleting ideas (you can adjust this if needed)
+      allow delete: if false;
+    }
+
+    // Deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
